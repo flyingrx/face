@@ -1,7 +1,7 @@
 var Util = function(){
 	
 };
-Util.prototype.xhr = function(url,method,data){
+Util.prototype.xhr = function(url,method,data,callback){
 	var xmlhttp;
 	if (window.XMLHttpRequest){
 	  xmlhttp=new XMLHttpRequest();
@@ -23,7 +23,8 @@ Util.prototype.xhr = function(url,method,data){
 	  {// 4 = "loaded"
 	  if (xmlhttp.status==200)
 		{// 200 = OK
-			return xmlhttp.responseText;
+            console.log(xmlhttp.responseText)
+			callback(xmlhttp.responseText);
 		}
 	  else
 		{

@@ -2,32 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" id="viewport" content="width=device-width, initial-scale=1">
     <title>人脸识别</title>
     <script src="util.js"></script>
+    <style>
+        #can{
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
+
 <body>
     <div>
         <input type="file" value="上传图片" id="upload">
         <!--<button></button>-->
+        <!--<div id="container">
+
+        </div>-->
+        <div>
+            <canvas id="can"></canvas>
+        </div>
     </div>
     <script>
         var up = document.getElementById("upload");
-        var info = {
-            api_key:'MbHN0i8ATK1bYDnfWklmqW7A_q8BCylO',
-            api_secret:'g3GnCC1TB_yWo4MjjUFcAhDZVB31Mucu',
-            return_landmark:1,
-            return_attributes:'none',
-        }
+//        var container = document.getElementById("container");
+        var can = document.getElementById("can");
+        var context = can.getContext('2d');
+        /*context.canvas.width=window.innerWidth;
+        context.canvas.height=window.innerHeight;*/
+
         var util = new Util();
         up.onchange = function (e) {
-            console.log(this.files);
+
             var fd = new FormData();
-            for(let v in info){
-                fd.append(v,info[v]);
+
+            var file = this.files[0];
+            fd.append('image_file',file);
+
+            var reader = new FileReader();
+            var html;
+            reader.readAsDataURL(file);
+            reader.onload = function (e) {
+                var src = e.target.result;
+                /*var img = new Image();
+                img.src = src;*/
+                var img = document.createElement('img')
+                img.setAttribute('src',src);
+                img.onload=function () {
+                    console.log(img.width)
+                    context.canvas.width=img.width;
+                    context.canvas.height=img.height;
+                    context.drawImage(img,0,0);
+                    util.xhr('index.php','POST',fd,handle);
+                }
+                /*html="<img src="+src+" title="+file.name+"/>";
+                container.innerHTML = html;*/
             }
-            fd.append('image_file',this.files[0]);
-            var res = util.xhr('index.php','POST',fd);
-            console.log(res);
+
+            function handle(responseText) {
+                console.log('res:',responseText)
+                var resObj = JSON.parse(responseText)
+                var landmark = resObj.faces[0].landmark;
+//                console.log(landmark)
+                context.fillStyle="red"
+                var leftEye = {
+                    x:landmark.left_eye_left_corner.x,
+                    y:landmark.left_eye_top.y,
+                    width:Math.abs(landmark.left_eye_right_corner.x-landmark.left_eye_left_corner.x),
+                    height:Math.abs(landmark.left_eye_top.y-landmark.left_eye_bottom.y)
+                }
+                var rightEye = {
+                    x:landmark.right_eye_left_corner.x,
+                    y:landmark.right_eye_top.y,
+                    width:Math.abs(landmark.right_eye_right_corner.x-landmark.right_eye_left_corner.x),
+                    height:Math.abs(landmark.right_eye_top.y-landmark.right_eye_bottom.y)
+                }
+                var mouth = {
+                    x:landmark.mouth_left_corner.x,
+                    y:landmark.mouth_upper_lip_top.y,
+                    width:Math.abs(landmark.mouth_right_corner.x-landmark.mouth_left_corner.x),
+                    height:Math.abs(landmark.mouth_upper_lip_top.y-landmark.mouth_lower_lip_top.y)
+                }
+//                console.log(leftEye)
+                fillR(leftEye)
+                fillR(rightEye)
+                fillR(mouth)
+
+            }
+            function fillR(obj) {
+                context.fillRect(obj.x,obj.y,obj.width,obj.height);
+            }
+//            console.log(resObj)
+
+
         }
     </script>
 </body>
